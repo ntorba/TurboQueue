@@ -1,0 +1,46 @@
+<div class="flex justify-center sm:w-2/3">
+    <div class="flex self-center mr-4">
+        <turbo-frame id="now_playing_img">
+            <img height="150" , width="150" src="{{ current_track.img_md }}">
+        </turbo-frame>
+    </div>
+    <div class="now_playing_metadata">
+        <turbo-frame id="now_playing_metadata">
+            <div class="song-metadata text-center">
+                <div class="text-lg font-medium text-gray-900">{{ current_track.name }}</div>
+                <div class="text-lg text-gray-500">{{ current_track.artist }}</div>
+            </div>
+        </turbo-frame>
+        <div data-controller="playback" class="flex justify-center my-1 mx-auto text-center">
+            <button class="prev-button bg-white text-gray-200 hover:bg-purple-400 rounded-full my-auto">
+                <svg class="my-auto" xmlns="http://www.w3.org/2000/svg" height="36px" viewBox="0 0 24 24" width="36px"
+                    fill="#000000">
+                    <path d="M0 0h24v24H0V0z" fill="none" />
+                    <path d="M6 6h2v12H6zm3.5 6l8.5 6V6l-8.5 6zm6.5 2.14L12.97 12 16 9.86v4.28z" />
+                </svg>
+            </button>
+            <button id="togglePlayBtn" class="play-button hover:bg-purple-400 rounded-full my-auto">
+                <svg class="h-20 w-20" xmlns="http://www.w3.org/2000/svg" height="48px" viewBox="0 0 24 24" width="48px"
+                    fill="#000000">
+                    <path d="M0 0h24v24H0V0z" fill="none" />
+                    <path
+                        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" />
+                </svg>
+            </button>
+            <button id="nextBtn" class="next-button bg-white hover:bg-purple-400 rounded-full my-auto">
+                <svg class="my-auto" xmlns="http://www.w3.org/2000/svg" height="36px" viewBox="0 0 24 24" width="36px"
+                    fill="#000000">
+                    <path d="M0 0h24v24H0V0z" fill="none" />
+                    <path d="M6 18l8.5-6L6 6v12zm2-8.14L11.03 12 8 14.14V9.86zM16 6h2v12h-2z" />
+                </svg>
+            </button>
+        </div>
+        <div class="progress-bar h-3 relative max-w-xl my-2 rounded-full overflow-hidden">
+            <div class="w-full h-full bg-gray-200 absolute"></div>
+            <turbo-frame id="now_playing_progress">
+                <div class="h-full bg-green-500 absolute"
+                    style="width:{{ current_track.progress_ms / current_track.duration_ms }}%">
+            </turbo-frame>
+        </div>
+    </div>
+</div>

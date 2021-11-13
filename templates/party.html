@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>TurboQueue Static Playground</title>
+    {{ stylesheet_pack('app') }}
+    {{ turbo() }}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link
+        href="https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Two+Tone|Material+Icons+Round|Material+Icons+Sharp"
+        rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='vendors/images/favicon.ico') }}">
+
+</head>
+
+<body>
+    <div class="max-h-screen">
+        <div class="sticky top-0 z-50">
+            <div class="bg-gradient-to-r from-gray-200 to-gray-200 via-purple-200 divide-y-4">
+                {% include 'now_playing.html' %}
+            </div>
+            <div class="bg-black">
+                <div class="flex justify-between sm:w-2/3">
+                    <h1 class="text-gray-300 text-2xl font-bold mb-2 pt-4">Up Next</h1>
+                    <div class="pt-2 text-center relative mx-auto text-gray-600">
+                        <input class="bg-white border-2 h-10 px-5 pr-16 rounded-lg text-sm focus:outline-none"
+                            type="search" name="search" placeholder="Add Song!">
+                        <button type="submit" class="absolute right-0 top-0 mt-5 mr-4">
+                            <svg class="text-gray-600 h-1 w-3 fill-current" xmlns="http://www.w3.org/2000/svg"
+                                xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px"
+                                viewBox="0 0 56.966 56.966" style="enable-background:new 0 0 56.966 56.966;"
+                                xml:space="preserve" width="512px" height="512px">
+                                <path
+                                    d="M55.146,51.887L41.588,37.786c3.486-4.144,5.396-9.358,5.396-14.786c0-12.682-10.318-23-23-23s-23,10.318-23,23  s10.318,23,23,23c4.761,0,9.298-1.436,13.177-4.162l13.661,14.208c0.571,0.593,1.339,0.92,2.162,0.92  c0.779,0,1.518-0.297,2.079-0.837C56.255,54.982,56.293,53.08,55.146,51.887z M23.984,6c9.374,0,17,7.626,17,17s-7.626,17-17,17  s-17-7.626-17-17S14.61,6,23.984,6z" />
+                            </svg>
+                        </button>
+                    </div>
+                    <button id="transferPlayback" class="text-white bg-blue-200 rounded m-2">
+                        transferPlayback!
+                    </button>
+                </div>
+            </div>
+        </div>
+        <turbo-frame id="song_table_body">
+            {% include 'song_table_body.html' %}
+        </turbo-frame>
+        </table>
+    </div>
+    <script src="https://sdk.scdn.co/spotify-player.js"></script>
+    <script>
+        var DEVICE_ID;
+        const getHashParams = () => {
+            var hashParams = {};
+            var e, r = /([^&;=]+)=?([^&;]*)/g,
+                q = window.location.hash.substring(1);
+            e = r.exec(q);
+            while (e) {
+                hashParams[e[1]] = decodeURIComponent(e[2]);
+                e = r.exec(q);
+            }
+            return hashParams;
+        };
+        params = getHashParams();
+
+        const track = {
+            name: "",
+            album: {
+                images: [
+                    { url: "" }
+                ]
+            },
+            artists: [
+                { name: "" }
+            ]
+        };
+
+        paused = false;
+        activate = false;
+
+        window.onSpotifyWebPlaybackSDKReady = () => {
+            const token = params.access_token;
+            if (params.access_token) {
+                // TODO: I need a mobile page with no playback controls that actually works
+                console.log("Make a page with no playback controls")
+            }
+            const player = new Spotify.Player({
+                name: 'TurboQueue Biiiiiitch',
+                getOAuthToken: cb => { cb(token); },
+                volume: 0.5
+            });
+
+            // Ready
+            player.addListener('ready', ({ device_id }) => {
+                DEVICE_ID = device_id;
+                console.log('Ready with Device ID', device_id);
+            });
+
+            // Not Ready
+            player.addListener('not_ready', ({ device_id }) => {
+                console.log('Device ID has gone offline', device_id);
+            });
+
+            player.addListener('initialization_error', ({ message }) => {
+                console.error(message);
+            });
+
+            player.addListener('authentication_error', ({ message }) => {
+                console.error(message);
+            });
+
+            player.addListener('account_error', ({ message }) => {
+                console.error(message);
+            });
+
+            document.getElementById('togglePlayBtn').onclick = function () {
+                function updateButton() {
+                    var playBtnHtml = `
+                        <div id="togglePlayPlayIcon">
+                            <svg class="h-20 w-20" xmlns="http://www.w3.org/2000/svg" height="48px" viewBox="0 0 24 24" width="48px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none" />
+                                                <path
+                                                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" />
+                            </svg>
+                        </div>`
+
+                    var pauseBtnHtml = `
+                        <div id="togglePlayPauseIcon">
+                            <svg class="h-20 w-20" xmlns="http://www.w3.org/2000/svg"
+                                enable-background="new 0 0 24 24" height="48px" viewBox="0 0 24 24" width="48px"
+                                fill="#000000">
+                                <g>
+                                    <rect fill="none" height="24" width="24" />
+                                    <rect fill="none" height="24" width="24" />
+                                    <rect fill="none" height="24" width="24" />
+                                </g>
+                                <g>
+                                    <g />
+                                    <path
+                                        d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M11,16H9V8h2V16z M15,16h-2V8h2V16z" />
+                                </g>
+                            </svg>
+                        </div>`
+
+                    var playBtn = document.querySelector("#togglePlayBtn");
+
+                    player.getCurrentState().then(state => {
+                        if (state.paused) {
+                            playBtn.innerHTML = pauseBtnHtml;
+                        } else {
+                            playBtn.innerHTML = playBtnHtml;
+                        }
+                    });
+                    var button = document.querySelector("#togglePlay");
+                }
+                player.togglePlay();
+                updateButton();
+            };
+
+            player.addListener('player_state_changed', (state => {
+
+                if (!state) {
+                    return;
+                }
+
+                track = state.track_window.current_track;
+                paused = state.paused;
+                fetch(
+                    'http://localhost:5000/now_playing',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            "state": state,
+                            "another": "another"
+                        })
+                    }
+                ).then(
+                    response => response.json()
+                )
+                    .then(
+                        data => { console.log("success: ", data); }
+                    );
+                player.getCurrentState().then(state => {
+                    (!state) ? active = false : active = true
+                });
+
+            }));
+
+            player.connect();
+        }
+
+        document.getElementById('transferPlayback').onclick = function () {
+            fetch(
+                'https://api.spotify.com/v1/me/player',
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': "Bearer " + params.access_token
+                    },
+                    body: JSON.stringify({
+                        "device_ids": [DEVICE_ID]
+                    })
+                }
+            ).then(
+                response => response
+            )
+                .then(
+                    data => { console.log("success: ", data); }
+                );
+        }
+
+        document.getElementById('nextBtn').onclick = function () {
+            fetch(
+                'https://api.spotify.com/v1/me/player/next',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': "Bearer " + params.access_token
+                    }
+                }
+            ).then(
+                response => response.json()
+            )
+                .then(
+                    data => { console.log("success: ", data); }
+                );
+        }
+
+    </script>
+    {{ javascript_pack('app') }}
+</body>
+
+</html>

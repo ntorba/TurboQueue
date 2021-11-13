@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>Index</title>
+
+    {{ stylesheet_pack('app') }}
+    {{ turbo() }}
+</head>
+
+<body>
+
+    <div class="jumbotron py-5">
+        <div class="container">
+            <h1 class="display-3">Hello, world!</h1>
+            <p>This is a template for a simple marketing or informational website. It includes a large callout called a
+                jumbotron and three supporting pieces of content. Use it as a starting point to create something more
+                unique.</p>
+            <p
+                class="inline-block mt-2 py-4 px-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700">
+                <a class="" href="/spotify_oauth" role="button">Login to Spotify</a>
+            </p>
+
+            <div class="d-flex justify-content-center">
+                <img src="{{ url_for('static', filename='vendors/images/webpack.png') }}" class="img-fluid" />
+            </div>
+
+        </div>
+    </div>
+
+    {{ javascript_pack('app') }}
+
+</body>
+
+</html>

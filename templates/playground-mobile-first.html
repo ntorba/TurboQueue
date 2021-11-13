@@ -53,7 +53,7 @@
             </div>
         </div>
         <div class="flex justify-between bg-black">
-            <h1 class="text-gray-300 text-2xl font-bold mb-2 pt-4">Up Next</h1>
+            <h1 class="text-gray-300 text-2xl font-bold mb-2 pt-4 ">Up Next</h1>
             <div class="pt-2 text-center relative mx-auto text-gray-600">
                 <input class="bg-white border-2 h-10 px-5 pr-16 rounded-lg text-sm focus:outline-none" type="search"
                     name="search" placeholder="Add Song!">
@@ -68,41 +68,46 @@
                 </button>
             </div>
         </div>
-        <table class="bg-black border-collapse  divide-y divide-gray-800">
-            <thead class="block bg-black px-6">
-                <th class="px-6 text-left text-lg font-bold text-gray-500 uppercase tracking-wider">
-                    Song
-                </th>
-                <th class="px-6 text-left text-lg font-bold text-gray-500 uppercase tracking-wider w-1/6">
-                    Votes
-                </th>
-                <th class="w-1/6"></th>
-            </thead>
-            <tbody class="block bg-black divide-y divide-x divide-gray-800 overflow-y-scroll">
-                {% for song in songs %}
-                <tr class="w-full mb-4 h-6">
-                    <td class="px-6 py-4 text-left w-2/3">
-                        <div class="flex">
-                            <div class="album-image px-1">
-                                <img height="64" width="64" class="m-2 border-2" src={{song.img_sm}}>
+        <div class="">
+            <table class="bg-black border-collapse divide-y divide-gray-800 w-full">
+                <thead class="block w-full bg-white px-6">
+                    <tr class="text-justify w-full">
+                        <th class="px-6 w-2/3 text-left text-xl font-bold text-gray-500 uppercase tracking-wider">
+                            Song
+                        </th>
+                        <th class="px-6 text-left text-xl font-bold text-gray-500 uppercase tracking-wider w-1/6">
+                            Votes
+                        </th>
+                        <th class="w-1/6"></th>
+                    </tr>
+                </thead>
+                <tbody class="w-full block bg-yellow-200 divide-y divide-x divide-gray-800 overflow-y-scroll">
+                    {% for song in songs %}
+                    <tr class="w-full mb-4 h-6 text-justify">
+                        <td class="px-6 py-4 text-left w-2/3">
+                            <div class="flex">
+                                <div class="album-image px-1">
+                                    <img height="64" width="64" class="m-2 border-2" src={{song.img_sm}}>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-lg font-bold text-gray-300">{{song.name}}</div>
+                                    <div class="text-lg text-gray-500">{{song.artist}}</div>
+                                </div>
                             </div>
-                            <div class="ml-4">
-                                <div class="text-lg font-bold text-gray-300">{{song.name}}</div>
-                                <div class="text-lg text-gray-500">{{song.artist}}</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="text-left w-1/6">
-                        <span
-                            class="p-3 inline-flex text-lg leading-5 font-semibold rounded-full bg-green-100 text-green-800">{{song.votes}}</span>
-                    </td>
-                    <td class="px-6 w-1/6">
-                        <button class="bg-green-800 text-green-100 hover:bg-green-400 rounded px-2 py-2">Vote!</button>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                        </td>
+                        <td class="px-6 text-left w-1/6">
+                            <span
+                                class="p-3 inline-flex text-lg leading-5 font-semibold rounded-full bg-green-100 text-green-800">{{song.votes}}</span>
+                        </td>
+                        <td class="px-6 w-1/6">
+                            <button
+                                class="bg-green-800 text-green-100 hover:bg-green-400 rounded px-2 py-2">Vote!</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </body>
 
