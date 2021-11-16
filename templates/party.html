@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>TurboQueue Static Playground</title>
+    <title>TurboQueue Party</title>
     {{ stylesheet_pack('app') }}
     {{ turbo() }}
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -48,7 +48,6 @@
     </div>
     <script src="https://sdk.scdn.co/spotify-player.js"></script>
     <script>
-        var DEVICE_ID;
         const getHashParams = () => {
             var hashParams = {};
             var e, r = /([^&;=]+)=?([^&;]*)/g,
@@ -60,28 +59,15 @@
             }
             return hashParams;
         };
-        params = getHashParams();
 
-        const track = {
-            name: "",
-            album: {
-                images: [
-                    { url: "" }
-                ]
-            },
-            artists: [
-                { name: "" }
-            ]
-        };
-
-        paused = false;
-        activate = false;
+        var params = getHashParams();
 
         window.onSpotifyWebPlaybackSDKReady = () => {
             const token = params.access_token;
+            localStorage.setItem("tq_oauth_token", token);
             if (params.access_token) {
                 // TODO: I need a mobile page with no playback controls that actually works
-                console.log("Make a page with no playback controls")
+                console.log("Make a page with no playback controls");
             }
             const player = new Spotify.Player({
                 name: 'TurboQueue Biiiiiitch',
@@ -91,7 +77,8 @@
 
             // Ready
             player.addListener('ready', ({ device_id }) => {
-                DEVICE_ID = device_id;
+                // DEVICE_ID = device_id;
+                localStorage.setItem("tq_oath_current_device_id", device_id);
                 console.log('Ready with Device ID', device_id);
             });
 
@@ -112,7 +99,40 @@
                 console.error(message);
             });
 
+            // player.addListener('player_state_changed', (state => {
+
+            //     if (!state) {
+            //         return;
+            //     }
+
+            //     // var track = state.track_window.current_track;
+            //     // var paused = state.paused;
+            //     fetch(
+            //         'http://localhost:5000/set_now_playing',
+            //         {
+            //             method: 'POST',
+            //             headers: {
+            //                 'Content-Type': 'application/json'
+            //             },
+            //             body: JSON.stringify({
+            //                 "state": state,
+            //                 "another": "another"
+            //             })
+            //         }
+            //     ).then(
+            //         response => response.json()
+            //     )
+            //         .then(
+            //             data => { console.log("success: ", data); }
+            //         );
+            //     player.getCurrentState().then(state => {
+            //         (!state) ? active = false : active = true;
+            //     });
+
+            // }));
+
             document.getElementById('togglePlayBtn').onclick = function () {
+                // TODO: Replace this with a call directly to the play/pause api endpoint, so i can move it out of this embedded nonsense
                 function updateButton() {
                     var playBtnHtml = `
                         <div id="togglePlayPlayIcon">
@@ -120,7 +140,7 @@
                                                 <path
                                                     d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" />
                             </svg>
-                        </div>`
+                        </div>`;
 
                     var pauseBtnHtml = `
                         <div id="togglePlayPauseIcon">
@@ -138,7 +158,7 @@
                                         d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M11,16H9V8h2V16z M15,16h-2V8h2V16z" />
                                 </g>
                             </svg>
-                        </div>`
+                        </div>`;
 
                     var playBtn = document.querySelector("#togglePlayBtn");
 
@@ -149,88 +169,16 @@
                             playBtn.innerHTML = playBtnHtml;
                         }
                     });
-                    var button = document.querySelector("#togglePlay");
+                    // var button = document.querySelector("#togglePlay");
                 }
                 player.togglePlay();
                 updateButton();
             };
 
-            player.addListener('player_state_changed', (state => {
-
-                if (!state) {
-                    return;
-                }
-
-                track = state.track_window.current_track;
-                paused = state.paused;
-                fetch(
-                    'http://localhost:5000/now_playing',
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            "state": state,
-                            "another": "another"
-                        })
-                    }
-                ).then(
-                    response => response.json()
-                )
-                    .then(
-                        data => { console.log("success: ", data); }
-                    );
-                player.getCurrentState().then(state => {
-                    (!state) ? active = false : active = true
-                });
-
-            }));
-
             player.connect();
-        }
-
-        document.getElementById('transferPlayback').onclick = function () {
-            fetch(
-                'https://api.spotify.com/v1/me/player',
-                {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': "Bearer " + params.access_token
-                    },
-                    body: JSON.stringify({
-                        "device_ids": [DEVICE_ID]
-                    })
-                }
-            ).then(
-                response => response
-            )
-                .then(
-                    data => { console.log("success: ", data); }
-                );
-        }
-
-        document.getElementById('nextBtn').onclick = function () {
-            fetch(
-                'https://api.spotify.com/v1/me/player/next',
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': "Bearer " + params.access_token
-                    }
-                }
-            ).then(
-                response => response.json()
-            )
-                .then(
-                    data => { console.log("success: ", data); }
-                );
-        }
-
+        };
     </script>
-    {{ javascript_pack('app') }}
+    {{ javascript_pack('app', 'party') }}
 </body>
 
 </html>
