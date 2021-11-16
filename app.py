@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from flask.globals import current_app
 import requests
+import uuid
 import time
 import threading
 from random import randint
@@ -39,13 +40,13 @@ CLIENT_SECRET = os.environ["SPOTIPY_CLIENT_SECRET"]
 SCOPE = "user-read-playback-state user-modify-playback-state user-read-currently-playing user-read-email streaming"
 REDIRECT_URI = "http://localhost:5000/spotify_oauth/callback"
 FINAL_REDIRECT_URI = "http://localhost:5000/party"
-AUTH_INITIAL_STATE = "heasfdasd"
-
+RANDOM_ID = str(uuid.uuid4())
 CURRENT_TRACK = dict(name="", album={"images": [{"url": ""}]}, artists=[{"name": ""}])
 
 
 @dataclass
 class Song:
+    party_id: int
     name: str
     artist: str
     votes: int
@@ -57,7 +58,17 @@ class Song:
     duration_ms: str = None
 
 
-EMPTY_TRACK = Song(
+@dataclass
+class Party:
+    id: int
+    name: str
+    access_token: str
+
+
+PARTY_DB = {1: Party(1, "Bailey's Birthday Party", None)}
+
+CURRENT_TRACK = Song(
+    party_id=1,
     name="not yet",
     artist="not yet",
     votes=0,
@@ -71,36 +82,44 @@ EMPTY_TRACK = Song(
 
 song_kwargs = mac_miller_songs(n=20)
 
-SONGS = {}
+EMPTY_TRACK = Song(
+    party_id=1,
+    name="not yet",
+    artist="not yet",
+    votes=0,
+    uri="none",
+    img_sm="none",
+    img_md="none",
+    img_lg="none",
+    progress_ms=0,
+    duration_ms=1,
+)
+
+PARTY_ID = PARTY_DB[1].id
+SONG_DB = {PARTY_ID: {"next_up": {}, "next_up_sorted": [], "now_playing": EMPTY_TRACK}}
+
 for i, kwargs in enumerate(song_kwargs):
-    SONGS[kwargs["uri"]] = Song(votes=randint(1, 100), **kwargs)
+    SONG_DB[PARTY_ID]["next_up"][kwargs["uri"]] = Song(
+        votes=randint(1, 100), party_id=1, **kwargs
+    )
+    SONG_DB[PARTY_ID]["next_up_sorted"] = sorted(
+        SONG_DB[PARTY_ID]["next_up"].values(),
+        key=lambda track: track.votes,
+        reverse=True,
+    )
 
-CURRENT_TRACK_NAME = "unset"
 
-
-def __update_now_playing():
-    global CURRENT_TRACK_NAME
-    if os.path.isfile("ACCESS_TOKEN.txt"):
-        with open("ACCESS_TOKEN.txt", "r") as f:
-            ACCESS_TOKEN = f.read()
-    else:
-        time.sleep(2)
-        return None
-    print("we in here!!!")
-    print("YOU MADE IT, ABOUT TO MAKE REQUEST...")
+def __get_remote_now_playing(access_token, party_id):
     res = requests.get(
         "https://api.spotify.com/v1/me/player",
         headers={
-            "Authorization": f"Bearer {ACCESS_TOKEN}",
+            "Authorization": f"Bearer {access_token}",
             "Content-Type": "application/json",
         },
     )
-    print("here is status code: ", res.status_code)
     if res.status_code == 204:
-        time.sleep(5)
-        return None
+        return res, None
     elif res.status_code == 200:
-        print("you got a 200!")
         body = res.json()
         track_info = {}
         track_info["artist"] = body["item"]["artists"][0]["name"]
@@ -112,44 +131,73 @@ def __update_now_playing():
         track_info["duration_ms"] = body["item"]["duration_ms"]
         track_info["progress_ms"] = body["progress_ms"]
         track_info["votes"] = 0
-        song = Song(**track_info)
-        print(song.name, CURRENT_TRACK_NAME)
-        if CURRENT_TRACK_NAME != song.name:
-            print("pushing a new song!!")
+        now_playing = Song(party_id=party_id, **track_info)
+        return res, now_playing
+    else:
+        return res, None
+
+
+def __update_now_playing(party_id):
+    access_token = PARTY_DB[party_id].access_token
+    if os.path.isfile("ACCESS_TOKEN.txt") and access_token is None:
+        with open("ACCESS_TOKEN.txt", "r") as f:
+            access_token = f.read()
+    elif access_token is None:
+        time.sleep(3)
+        return None
+    if access_token is None:
+        print(
+            f"access token for party '{PARTY_DB[party_id].access_token}', with id {party_id} is not defined yet. sleeping..."
+        )
+        time.sleep(3)
+        return None
+    res, remote_now_playing = __get_remote_now_playing(access_token, party_id)
+    if res.status_code == 204:
+        # TODO: update this error handling...
+        print("your playback is not on your party's device")
+        time.sleep(5)
+        return None
+    if res.status_code != 200:
+        print(
+            f"failed when getting now_playing from spotify with status code '{res.status_code}'"
+        )
+        time.sleep(5)
+        return None
+    else:
+        if SONG_DB[party_id]["now_playing"].name != remote_now_playing.name:
             turbo.push(
                 turbo.update(
-                    f'<img height="150" , width="150" src="{song.img_md}">',
+                    f'<img height="150" , width="150" src="{remote_now_playing.img_md}">',
                     "now_playing_img",
                 )
             )
             turbo.push(
                 turbo.update(
-                    f'<div class="song-metadata text-center"><div class="text-lg font-medium text-gray-900">{song.name }</div><div class="text-lg text-gray-500">{ song.artist}</div></div>',
+                    f'<div class="song-metadata text-center"><div class="text-lg font-medium text-gray-900">{remote_now_playing.name }</div><div class="text-lg text-gray-500">{ remote_now_playing.artist}</div></div>',
                     "now_playing_metadata",
                 )
             )
-        CURRENT_TRACK_NAME = song.name
+        SONG_DB[party_id]["now_playing"] = remote_now_playing
+        print("pushing playback progress")
         turbo.push(
             turbo.update(
-                f'<div class="h-full bg-green-500 absolute" style="width:{ round((song.progress_ms / song.duration_ms)*100) }%">',
+                f'<div class="h-full bg-green-500 absolute" style="width:{ round((remote_now_playing.progress_ms / remote_now_playing.duration_ms)*100) }%">',
                 "now_playing_progress",
             )
         )
-        time.sleep(1)
+        time.sleep(5)
 
 
 def update_now_playing():
     with app.app_context():
         while True:
-            print("updating now playing...")
-            __update_now_playing()
+            for key in PARTY_DB.keys():
+                __update_now_playing(key)
 
 
-threading.Thread(target=update_now_playing).start()
-
-# @app.before_first_request
-# def before_first_request():
-#     threading.Thread(target=update_now_playing).start()
+@app.before_first_request
+def before_first_request():
+    threading.Thread(target=update_now_playing).start()
 
 
 @app.cli.command("webpack_init")
@@ -166,29 +214,32 @@ def hello():
     return render_template("index.html")
 
 
-@app.route("/party/")
-def party():
+@app.route("/party/<party_id>/")
+def party(party_id):
+    party_id = int(party_id)
     return render_template(
         "party.html",
-        songs=sorted(SONGS.values(), key=lambda x: x.votes, reverse=True),
-        current_track=EMPTY_TRACK,
+        party_name=PARTY_DB[party_id].name,
+        songs=[track for track in SONG_DB[party_id]["next_up_sorted"]],
+        current_track=SONG_DB[party_id]["now_playing"],
     )
 
 
-@app.route("/spotify_oauth")
-def spotify_oauth():
+@app.route("/spotify_oauth/<party_id>")
+def spotify_oauth(party_id):
     """
     Auth Step 1: Authorization, redirect to spotify login page
     This sends the user to spotify, where they agree to our scope, then it
     redirects them to /spotify_oauth/callback for me to parse the token,
     then redirect to the party or home page for them to do things.
     """
+    auth_state = f"{party_id}-----{RANDOM_ID}"
     auth_query_parameters = {
         "response_type": "code",
         "redirect_uri": REDIRECT_URI,
         "scope": SCOPE,
         "client_id": CLIENT_ID,
-        "state": AUTH_INITIAL_STATE,
+        "state": auth_state,
     }
     url_args = "&".join(
         [
@@ -206,10 +257,13 @@ def spotify_get_token():
     # print('THat original request: ', file=sys.stderr)
     # print(request, file=sys.stderr)
     state = request.args["state"]
-    if state != AUTH_INITIAL_STATE:
+    party_id, random_string = state.split("-----")
+    party_id = int(party_id)
+    if random_string != RANDOM_ID:
         raise Exception(
             "The state is different from my request, spotify told me to reject this situation"
         )
+
     auth_token_code = request.args["code"]
     code_payload = {
         "grant_type": "authorization_code",
@@ -223,11 +277,13 @@ def spotify_get_token():
     # Auth Step 5: Tokens are Returned to Application
     res_data = res.json()
     ACCESS_TOKEN = res_data["access_token"]
+    PARTY_DB[party_id].access_token = ACCESS_TOKEN
     with open("ACCESS_TOKEN.txt", "w") as f:
         f.write(ACCESS_TOKEN)
+    # TODO: update to not write this after I confirm I have things working
     print("I JUST SET ACCESS TOKEN")
     url_args = f"access_token={ACCESS_TOKEN}&refresh_token={res_data['refresh_token']}"
-    redirect_url = "{}/#{}".format(FINAL_REDIRECT_URI, url_args)
+    redirect_url = "{}/#{}".format(f"{FINAL_REDIRECT_URI}/{party_id}", url_args)
     return redirect(redirect_url)
 
 
@@ -239,36 +295,44 @@ def spotify_callback():
 @app.route("/vote", methods=["POST"])
 def vote():
     song_uri = str(request.json["uri"])
+    party_id = int(request.json["party_id"])
     ## This sorting will probably get that bad unless people have MASSIVE queues, in which case that could cause a problem
-    current_order = sorted(SONGS.values(), key=lambda x: x.votes, reverse=True)
-    current_order = [i.name for i in current_order]
-    SONGS[song_uri].votes += 1
-    new_order_full = sorted(SONGS.values(), key=lambda x: x.votes, reverse=True)
-    new_order = [i.name for i in new_order_full]
+    SONG_DB[party_id]["next_up"][song_uri].votes += 1
+    new_order = sorted(
+        SONG_DB[party_id]["next_up"].values(), key=lambda x: x.votes, reverse=True
+    )
     if (
-        new_order == current_order
+        new_order == SONG_DB[party_id]["next_up_sorted"]
     ):  ## If no resort is necessary, you can just push the number
         turbo.push(
             turbo.update(
-                f'<span class="p-3 inline-flex text-lg leading-5 font-semibold rounded-full bg-green-100 text-green-800">{SONGS[song_uri].votes}</span>',
+                f'<span class="p-3 inline-flex text-lg leading-5 font-semibold rounded-full bg-green-100 text-green-800">{SONG_DB[party_id]["next_up"][song_uri].votes}</span>',
                 song_uri,
             )
         )
     else:  # if the order has changed, we need to push the full table..
         turbo.push(
             turbo.update(
-                render_template("song_table_body.html", songs=new_order_full),
+                render_template("song_table_body.html", songs=new_order),
                 "song_table_body",
             )
         )
+        SONG_DB[party_id]["next_up_sorted"] = new_order
     return {"success": True, "uri": song_uri}, 200
+
+
+@app.route("/set_now_playing/<party_id>")
+def set_now_playing(party_id):
+    print("I'm setting now_playing from the function...")
+    __update_now_playing(int(party_id))
+    return {"message": "success"}, 200
 
 
 @app.route("/playground")
 def playground():
     return render_template(
         "playground.html",
-        songs=sorted(SONGS.values(), key=lambda x: x.votes, reverse=True),
+        songs=sorted(SONG_DB.values(), key=lambda x: x.votes, reverse=True),
     )
 
 
@@ -276,5 +340,5 @@ def playground():
 def playground_mobile():
     return render_template(
         "playground-mobile-first-different-scroll.html",
-        songs=sorted(SONGS.values(), key=lambda x: x.votes, reverse=True),
+        songs=sorted(SONG_DB.values(), key=lambda x: x.votes, reverse=True),
     )
