@@ -1,3 +1,4 @@
+<h1 class="text-white text-center">{{ party_name }}</h1>
 <div class="flex justify-center sm:w-2/3">
     <div class="flex self-center mr-4">
         <turbo-frame id="now_playing_img">
@@ -11,8 +12,8 @@
                 <div class="text-lg text-gray-500">{{ current_track.artist }}</div>
             </div>
         </turbo-frame>
-        <div data-controller="playback" class="flex justify-center my-1 mx-auto text-center">
-            <button class="prev-button bg-white text-gray-200 hover:bg-purple-400 rounded-full my-auto">
+        <div id="playback_controls" data-controller="playback" class="flex justify-center my-1 mx-auto text-center">
+            <button id="prevBtn" class="prev-button bg-white text-gray-200 hover:bg-purple-400 rounded-full my-auto">
                 <svg class="my-auto" xmlns="http://www.w3.org/2000/svg" height="36px" viewBox="0 0 24 24" width="36px"
                     fill="#000000">
                     <path d="M0 0h24v24H0V0z" fill="none" />
