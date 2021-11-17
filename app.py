@@ -19,19 +19,26 @@ from dotenv import load_dotenv
 load_dotenv()
 
 BASE_DIR = Path(__file__).parent
-app = Flask(__name__, static_folder="frontend/build", static_url_path="/static/")
-app.config.from_object(Config)
-cors = CORS(app)
-app.config["CORS_HEADERS"] = "Content-Type"
-app.config.update(
-    {
-        "WEBPACK_LOADER": {
-            "MANIFEST_FILE": os.path.join(BASE_DIR, "frontend/build/manifest.json"),
+
+
+def create_app():
+    app = Flask(__name__, static_folder="frontend/build", static_url_path="/static/")
+    app.config.from_object(Config)
+    cors = CORS(app)
+    app.config["CORS_HEADERS"] = "Content-Type"
+    app.config.update(
+        {
+            "WEBPACK_LOADER": {
+                "MANIFEST_FILE": os.path.join(BASE_DIR, "frontend/build/manifest.json"),
+            }
         }
-    }
-)
-setup_jinja2_ext(app)
-turbo = Turbo(app)
+    )
+    setup_jinja2_ext(app)
+    turbo = Turbo(app)
+    return app, turbo
+
+
+app, turbo = create_app()
 
 SPOTIFY_AUTH_URL = "https://accounts.spotify.com/authorize"
 SPOTIFY_TOKEN_URL = "https://accounts.spotify.com/api/token"
