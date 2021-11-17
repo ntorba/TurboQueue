@@ -3,3 +3,4 @@
 *.pyc
 .cache
 ACCESS_TOKEN.txt
+.DS_Store
