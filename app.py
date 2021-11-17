@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-from flask.globals import current_app
 import requests
 import uuid
 import time
@@ -11,6 +10,8 @@ import urllib.parse
 from flask import Flask, render_template, request, redirect
 from flask_cors import CORS
 from turbo_flask import Turbo
+import spotipy
+from spotipy.oauth2 import SpotifyClientCredentials
 from webpack_boilerplate.config import setup_jinja2_ext
 from config import Config
 from query_spotify import mac_miller_songs
@@ -56,12 +57,12 @@ class Song:
     party_id: int
     name: str
     artist: str
-    votes: int
     uri: str
     img_sm: str
     img_md: str
     img_lg: str
-    progress_ms: str = None
+    votes: int = 0
+    progress_ms: str = 0
     duration_ms: str = None
 
 
