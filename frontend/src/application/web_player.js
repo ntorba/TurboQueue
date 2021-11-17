@@ -1,3 +1,7 @@
+import { transferPlayback } from './party.js';
+
+console.log("I made it past the transferplayback import");
+
 const getHashParams = () => {
     var hashParams = {};
     var e, r = /([^&;=]+)=?([^&;]*)/g,
@@ -30,6 +34,9 @@ window.onSpotifyWebPlaybackSDKReady = () => {
         // DEVICE_ID = device_id;
         localStorage.setItem("tq_oath_current_device_id", device_id);
         console.log('Ready with Device ID', device_id);
+        console.log('ATTEMPTING TO transfering playback to this device');
+        transferPlayback();
+        console.log("i think i just ATTEMPTED transfer...");
     });
 
     // Not Ready
