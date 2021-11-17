@@ -214,6 +214,47 @@ def hello():
     return render_template("index.html")
 
 
+@app.route("/search_spotify", methods=["POST"])
+def search_spotify():
+    # access_token = PARTY_DB[int(party_id)].access_token
+    query = request.json["query"]
+    if len(query) == 0:
+        return {"message": "you sent an empty query"}, 401
+    spotify = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
+    results = spotify.search(query)
+    return {
+        "items": [
+            {
+                "name": i["name"],
+                "artist": i["artists"][0]["name"],
+                "uri": i["uri"],
+                "img_sm": i["album"]["images"][-1],
+                "img_md": i["album"]["images"][1],
+                "img_lg": i["album"]["images"][0],
+                "duration_ms": i["duration_ms"],
+            }
+            for i in results["tracks"]["items"]
+        ]
+    }
+
+
+@app.route("/add_track", methods=["POST"])
+def add_track():
+    party_id = request.json["party_id"]
+    track_kwargs = request.json["track"]
+    track_kwargs["party_id"] = party_id
+    track = Song(**track_kwargs)
+
+    # TODO: this would be way better as a class property or something so the sort happens automaticall and not manually
+    SONG_DB[party_id]["next_up"][track.uri] = track
+    SONG_DB[party_id]["next_up_sorted"] = sorted(
+        SONG_DB[PARTY_ID]["next_up"].values(),
+        key=lambda track: track.votes,
+        reverse=True,
+    )
+    return {"message": "success"}, 201
+
+
 @app.route("/party/<party_id>/")
 def party(party_id):
     party_id = int(party_id)
