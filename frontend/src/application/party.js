@@ -3,7 +3,13 @@ console.log("you made it to party");
 function pingSetNowPlaying() {
     var party_id = window.location.pathname.split("/")[2];
     console.log("Pinging server to tell it to update the nowplyaing cuz I skipped to next");
-    fetch("http://localhost:5000/set_now_playing/" + party_id)
+    fetch(
+        "http://localhost:5000/set_now_playing/" + party_id,
+        {
+            method: 'PUT',
+        }
+
+    )
         .then(
             response => response.text()
         )
@@ -12,8 +18,10 @@ function pingSetNowPlaying() {
         );
 }
 
-function transferPlayback() {
+export function transferPlayback() {
     console.log("attempting to transer feedback..");
+    console.log("here is the device id: " + localStorage.tq_oath_current_device_id);
+    console.log("here is oauth token: " + localStorage.tq_oauth_token);
     fetch(
         'https://api.spotify.com/v1/me/player',
         {
@@ -39,8 +47,6 @@ function transferPlayback() {
             }
         );
 }
-
-console.log("made it past first func def");
 
 function nextTrack() {
     fetch(
@@ -88,36 +94,21 @@ function prevTrack() {
         );
 }
 
-
-// document.getElementById('transferPlayback').onclick = function () {
-
-// };
+function addClickListener(id, func) {
+    var el = document.querySelector('#' + id);
+    if (el) {
+        el.addEventListener("click", func);
+    }
+    else {
+        console.log("No element found with id " + id);
+    }
+}
 
 function btnEventListeners() {
     window.onload = function () {
-        var transferPlaybackBtn = document.querySelector('#transferPlayback');
-        var nextBtn = document.querySelector('#nextBtn');
-        var prevBtn = document.querySelector('#prevBtn');
-        if (transferPlaybackBtn) {
-            transferPlaybackBtn.addEventListener("click", transferPlayback);
-        }
-        else {
-            console.log("No 'transferPlayback' button found");
-        }
-
-        if (nextBtn) {
-            nextBtn.addEventListener("click", nextTrack);
-        }
-        else {
-            console.log("No 'prevBtn' button found");
-        }
-
-        if (prevBtn) {
-            prevBtn.addEventListener("click", prevTrack);
-        }
-        else {
-            console.log("No 'prevBtn' button found");
-        }
+        // addClickListener("transferPlayback", transferPlayback); I'm doing this automatically now
+        addClickListener("nextBtn", nextTrack);
+        addClickListener("prevBtn", prevTrack);
     };
     console.log("i'm under where i added event listeners");
 }
