@@ -88,7 +88,7 @@ CURRENT_TRACK = Song(
     duration_ms=1,
 )
 
-song_kwargs = mac_miller_songs(n=20)
+song_kwargs = mac_miller_songs(n=3)
 
 EMPTY_TRACK = Song(
     party_id=1,
@@ -108,7 +108,7 @@ SONG_DB = {PARTY_ID: {"next_up": {}, "next_up_sorted": [], "now_playing": EMPTY_
 
 for i, kwargs in enumerate(song_kwargs):
     SONG_DB[PARTY_ID]["next_up"][kwargs["uri"]] = Song(
-        votes=randint(1, 100), party_id=1, **kwargs
+        votes=randint(1, 5), party_id=1, **kwargs
     )
     SONG_DB[PARTY_ID]["next_up_sorted"] = sorted(
         SONG_DB[PARTY_ID]["next_up"].values(),
@@ -236,9 +236,9 @@ def search_spotify():
                 "name": i["name"],
                 "artist": i["artists"][0]["name"],
                 "uri": i["uri"],
-                "img_sm": i["album"]["images"][-1],
-                "img_md": i["album"]["images"][1],
-                "img_lg": i["album"]["images"][0],
+                "img_sm": i["album"]["images"][-1]["url"],
+                "img_md": i["album"]["images"][1]["url"],
+                "img_lg": i["album"]["images"][0]["url"],
                 "duration_ms": i["duration_ms"],
             }
             for i in results["tracks"]["items"]
@@ -248,9 +248,10 @@ def search_spotify():
 
 @app.route("/add_track", methods=["POST"])
 def add_track():
-    party_id = request.json["party_id"]
+    party_id = int(request.json["track"]["party_id"])
     track_kwargs = request.json["track"]
-    track_kwargs["party_id"] = party_id
+    print("Your track kwargs!")
+    print(track_kwargs)
     track = Song(**track_kwargs)
 
     # TODO: this would be way better as a class property or something so the sort happens automaticall and not manually
@@ -260,7 +261,20 @@ def add_track():
         key=lambda track: track.votes,
         reverse=True,
     )
+    turbo.push(
+        turbo.update(
+            render_template(
+                "song_table_body.html", songs=SONG_DB[party_id]["next_up_sorted"]
+            ),
+            "song_table_body",
+        )
+    )
     return {"message": "success"}, 201
+
+
+@app.route("/next_up/<party_id>")
+def next_up(party_id):
+    return SONG_DB[int(party_id)]["next_up"]
 
 
 @app.route("/party/<party_id>/")
@@ -370,11 +384,10 @@ def vote():
     return {"success": True, "uri": song_uri}, 200
 
 
-@app.route("/set_now_playing/<party_id>")
+@app.route("/set_now_playing/<party_id>", methods=["PUT"])
 def set_now_playing(party_id):
-    print("I'm setting now_playing from the function...")
     __update_now_playing(int(party_id))
-    return {"message": "success"}, 200
+    return {"message": "success"}, 201
 
 
 @app.route("/playground")
