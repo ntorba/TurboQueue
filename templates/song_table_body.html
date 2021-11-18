@@ -32,11 +32,42 @@
             </td>
             <td class="px-6 w-1/6">
                 <div data-controller="vote">
-                    <button id={{song.uri}} data-action="vote#vote"
+                    <button id={{song.uri}} type="button" data-action="click->vote#vote"
                         class="bg-green-800 text-green-100 hover:bg-green-400 rounded px-2 py-2">Vote!</button>
                 </div>
             </td>
         </tr>
+        <script>
+            document.getElementById('{{song.uri}}').ontouchstart = function (event) {
+                let postData = async () => {
+                    try {
+                        await fetch(
+                            'http://localhost:5000/vote',
+                            {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    "uri": event.target.id,
+                                    "another": "another"
+                                })
+                            }
+                        ).then(
+                            response => response.json()
+                        )
+                            .then(
+                                data => { console.log("success: ", data); }
+                            );
+                    } catch (err) {
+                        console.log("caught error");
+                        console.error(`Error: ${err}`);
+                    }
+                };
+
+                postData();
+            }
+        </script>
         {% endfor %}
     </tbody>
 </table>
