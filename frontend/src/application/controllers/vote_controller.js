@@ -5,6 +5,7 @@ export default class extends Controller {
     static targets = ["vote"];
 
     vote(event) {
+        var party_id = window.location.pathname.split("/")[2];
         let postData = async () => {
             try {
                 await fetch(
@@ -16,7 +17,7 @@ export default class extends Controller {
                         },
                         body: JSON.stringify({
                             "uri": event.target.id,
-                            "another": "another"
+                            "party_id": party_id
                         })
                     }
                 ).then(
