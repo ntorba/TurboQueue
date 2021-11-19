@@ -1,0 +1,10 @@
+{% for result in search_results %}
+<button>
+    <div class="text-lg text-gray-500">
+        {{ result.name }}
+    </div>
+    <div class="text-lg font-bold text-gray-300">
+        {{ result.artist }}
+    </div>
+</button>
+{% endfor %}

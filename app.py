@@ -166,9 +166,9 @@ def __update_now_playing(party_id):
         time.sleep(5)
         return None
     if res.status_code != 200:
-        print(
-            f"failed when getting now_playing from spotify with status code '{res.status_code}'"
-        )
+        # print(
+        #     f"failed when getting now_playing from spotify with status code '{res.status_code}'"
+        # )
         time.sleep(5)
         return None
     else:
@@ -193,7 +193,7 @@ def __update_now_playing(party_id):
                 "now_playing_progress",
             )
         )
-        time.sleep(5)
+        time.sleep(1)
 
 
 def update_now_playing():
@@ -245,6 +245,35 @@ def search_spotify():
         ]
     }
 
+@app.route("/search_playground")
+def search_playground():
+    return render_template(
+        'search_playground.html', 
+        search_results=[]
+    )
+
+@app.route("/search_spotify_playground", methods=["POST", "GET"])
+def search_spotify_playground():
+    query = request.json["query"]
+    if len(query) == 0:
+        return {"message": "you sent an empty query"}, 401
+    spotify = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
+    results = spotify.search(query)
+    results = [
+        {
+            "name": i["name"],
+            "artist": i["artists"][0]["name"],
+            "uri": i["uri"],
+            "img_sm": i["album"]["images"][-1]["url"],
+            "img_md": i["album"]["images"][1]["url"],
+            "img_lg": i["album"]["images"][0]["url"],
+            "duration_ms": i["duration_ms"],
+        }
+        for i in results["tracks"]["items"]
+    ]
+    return {
+        "html": render_template("search_results.html", search_results=results)
+    }
 
 @app.route("/add_track", methods=["POST"])
 def add_track():
