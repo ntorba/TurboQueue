@@ -62,18 +62,18 @@ const showResults = async (query) => {
     searchResults.innerHTML = '';
     await fetchResults(query);
     const ul = document.createElement('ul');
-    ul.classList.add('results');
+    ul.classList.add('results', 'text-left');
     ul.classList.add('overflow-visible');
     ul.classList.add('bg-white', 'divide-y-2', 'divide-green-400');
     results.items.forEach(result => {
         console.log("here is the result you look for");
         console.log(result);
         const li = document.createElement('li');
-        li.classList.add('result-item');
+        li.classList.add('result-item', 'text-left', 'px-2');
         const add_track_btn = document.createElement('button');
-
+        add_track_btn.classList.add('bg-white', 'hover:bg-blue-200', 'w-full', 'rounded-full');
         let artist_name_div = document.createElement('div');
-        artist_name_div.classList.add('text-left','text-lg', 'text-gray-500');
+        artist_name_div.classList.add('text-left', 'text-lg', 'text-gray-500');
         artist_name_div.innerText = result.name;
 
         let track_name_div = document.createElement('div');

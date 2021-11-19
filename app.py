@@ -10,11 +10,11 @@ import urllib.parse
 from flask import Flask, render_template, request, redirect
 from flask_cors import CORS
 from turbo_flask import Turbo
-import spotipy
-from spotipy.oauth2 import SpotifyClientCredentials
 from webpack_boilerplate.config import setup_jinja2_ext
 from config import Config
 from query_spotify import mac_miller_songs
+import spotipy
+from spotipy.oauth2 import SpotifyClientCredentials
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -229,7 +229,7 @@ def search_spotify():
     if len(query) == 0:
         return {"message": "you sent an empty query"}, 401
     spotify = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
-    results = spotify.search(query)
+    results = spotify.search(query, limit=5)
     return {
         "items": [
             {
@@ -245,12 +245,11 @@ def search_spotify():
         ]
     }
 
+
 @app.route("/search_playground")
 def search_playground():
-    return render_template(
-        'search_playground.html', 
-        search_results=[]
-    )
+    return render_template("search_playground.html", search_results=[])
+
 
 @app.route("/search_spotify_playground", methods=["POST", "GET"])
 def search_spotify_playground():
@@ -271,9 +270,8 @@ def search_spotify_playground():
         }
         for i in results["tracks"]["items"]
     ]
-    return {
-        "html": render_template("search_results.html", search_results=results)
-    }
+    return {"html": render_template("search_results.html", search_results=results)}
+
 
 @app.route("/add_track", methods=["POST"])
 def add_track():
