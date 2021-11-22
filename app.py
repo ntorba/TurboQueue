@@ -5,7 +5,7 @@ import uuid
 import time
 import threading
 from random import randint
-from dataclasses import dataclass
+from dataclasses import dataclass, field, asdict
 import urllib.parse
 from flask import Flask, render_template, request, redirect
 from flask_cors import CORS
@@ -64,7 +64,6 @@ class Song:
     votes: int = 0
     progress_ms: str = 0
     duration_ms: str = None
-
 
 @dataclass
 class Party:
@@ -186,7 +185,7 @@ def __update_now_playing(party_id):
                 )
             )
         SONG_DB[party_id]["now_playing"] = remote_now_playing
-        print("pushing playback progress")
+        # print("pushing playback progress")
         turbo.push(
             turbo.update(
                 f'<div class="h-full bg-green-500 absolute" style="width:{ round((remote_now_playing.progress_ms / remote_now_playing.duration_ms)*100) }%">',
@@ -222,17 +221,19 @@ def hello():
     return render_template("index.html")
 
 
-@app.route("/search_spotify", methods=["POST"])
-def search_spotify():
-    # access_token = PARTY_DB[int(party_id)].access_token
-    query = request.json["query"]
+@app.route("/spotify_search_tracks")
+def spotify_search_tracks():
+    print("YOU MADE IT TO THE SRR FUNC")
+    print("here are the args")
+    print(request.args)
+    query = request.args["search"]
     if len(query) == 0:
-        return {"message": "you sent an empty query"}, 401
+        return {"message": "you sent an empty query"}, 400
     spotify = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
     results = spotify.search(query, limit=5)
-    return {
-        "items": [
-            {
+    results = [
+        Song(
+            **{
                 "name": i["name"],
                 "artist": i["artists"][0]["name"],
                 "uri": i["uri"],
@@ -240,37 +241,12 @@ def search_spotify():
                 "img_md": i["album"]["images"][1]["url"],
                 "img_lg": i["album"]["images"][0]["url"],
                 "duration_ms": i["duration_ms"],
+                "party_id": 1 # TODO: this needs to come from client...
             }
-            for i in results["tracks"]["items"]
-        ]
-    }
-
-
-@app.route("/search_playground")
-def search_playground():
-    return render_template("search_playground.html", search_results=[])
-
-
-@app.route("/search_spotify_playground", methods=["POST", "GET"])
-def search_spotify_playground():
-    query = request.json["query"]
-    if len(query) == 0:
-        return {"message": "you sent an empty query"}, 401
-    spotify = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
-    results = spotify.search(query)
-    results = [
-        {
-            "name": i["name"],
-            "artist": i["artists"][0]["name"],
-            "uri": i["uri"],
-            "img_sm": i["album"]["images"][-1]["url"],
-            "img_md": i["album"]["images"][1]["url"],
-            "img_lg": i["album"]["images"][0]["url"],
-            "duration_ms": i["duration_ms"],
-        }
+        )
         for i in results["tracks"]["items"]
     ]
-    return {"html": render_template("search_results.html", search_results=results)}
+    return render_template("search_results.html", search_results=results)
 
 
 @app.route("/add_track", methods=["POST"])
@@ -279,6 +255,7 @@ def add_track():
     track_kwargs = request.json["track"]
     print("Your track kwargs!")
     print(track_kwargs)
+    track_kwargs.pop("controller") # TODO: this logic should probably not be here... why even send the data?
     track = Song(**track_kwargs)
 
     # TODO: this would be way better as a class property or something so the sort happens automaticall and not manually
