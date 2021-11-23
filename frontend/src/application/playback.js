@@ -1,5 +1,3 @@
-console.log("you made it to party");
-
 function pingSetNowPlaying() {
     var party_id = window.location.pathname.split("/")[2];
     console.log("Pinging server to tell it to update the nowplyaing cuz I skipped to next");
