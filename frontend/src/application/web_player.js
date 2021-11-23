@@ -1,4 +1,4 @@
-import { transferPlayback } from './party.js';
+import { transferPlayback } from './playback.js';
 
 console.log("I made it past the transferplayback import");
 
