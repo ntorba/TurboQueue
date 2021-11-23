@@ -365,11 +365,6 @@ def spotify_get_token():
     return redirect(redirect_url)
 
 
-@app.route("/spotify/callback")
-def spotify_callback():
-    return "You finally called me back!"
-
-
 @app.route("/vote", methods=["POST"])
 def vote():
     song_uri = str(request.json["uri"])
