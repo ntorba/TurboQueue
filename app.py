@@ -303,18 +303,6 @@ def party(party_id):
         )
 
 
-@app.route("/party_guest/<party_id>/")
-def party_guest(party_id):
-    print("party request:")
-    party_id = int(party_id)
-    return render_template(
-        "party_guest.html",
-        party_name=PARTY_DB[party_id].name,
-        songs=[track for track in SONG_DB[party_id]["next_up_sorted"]],
-        current_track=SONG_DB[party_id]["now_playing"],
-    )
-
-
 @app.route("/spotify_oauth/<party_id>")
 def spotify_oauth(party_id):
     """
