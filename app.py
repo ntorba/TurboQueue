@@ -284,8 +284,31 @@ def next_up(party_id):
 @app.route("/party/<party_id>/")
 def party(party_id):
     party_id = int(party_id)
+    if "access_token" not in request.args:
+        print("rendering GUEST view")
+        return render_template(
+            "party.html",
+            party_name=PARTY_DB[party_id].name,
+            songs=[track for track in SONG_DB[party_id]["next_up_sorted"]],
+            current_track=SONG_DB[party_id]["now_playing"],
+        )
+    else:
+        return render_template(
+            "party.html",
+            party_name=PARTY_DB[party_id].name,
+            songs=[track for track in SONG_DB[party_id]["next_up_sorted"]],
+            current_track=SONG_DB[party_id]["now_playing"],
+            access_token=request.args["access_token"], 
+            # refresh_token=request.args["refresh_token"]
+        )
+
+
+@app.route("/party_guest/<party_id>/")
+def party_guest(party_id):
+    print("party request:")
+    party_id = int(party_id)
     return render_template(
-        "party.html",
+        "party_guest.html",
         party_name=PARTY_DB[party_id].name,
         songs=[track for track in SONG_DB[party_id]["next_up_sorted"]],
         current_track=SONG_DB[party_id]["now_playing"],

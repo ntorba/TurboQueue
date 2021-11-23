@@ -1,0 +1,23 @@
+<h1 class="text-purple-800 text-center text-lg">{{ party_name }}</h1>
+<div class="flex-col align-center sm:w-2/3 justify-center mx-auto">
+    <div class="mx-auto mr-4 mt-2">
+        <turbo-frame id="now_playing_img">
+            <img class="mx-auto" height="100" width="100" src="{{ current_track.img_md }}" >
+        </turbo-frame>
+    </div>
+    <div class="now_playing_metadata mx-auto">
+        <turbo-frame id="now_playing_metadata">
+            <div class="song-metadata text-center">
+                <div class="text-lg font-medium text-gray-900">{{ current_track.name }}</div>
+                <div class="text-lg text-gray-500">{{ current_track.artist }}</div>
+            </div>
+        </turbo-frame>
+        <div class="progress-bar h-3 relative mx-auto max-w-xl my-2 rounded-full overflow-hidden">
+            <div class="w-full h-full bg-gray-200 absolute"></div>
+            <turbo-frame id="now_playing_progress">
+                <div class="h-full bg-green-500 absolute"
+                    style="width:{{ current_track.progress_ms / current_track.duration_ms }}%">
+            </turbo-frame>
+        </div>
+    </div>
+</div>

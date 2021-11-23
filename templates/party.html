@@ -17,7 +17,11 @@
     <div class="max-h-screen">
         <div class="sticky top-0 z-50">
             <div class="bg-gradient-to-r from-gray-200 to-gray-200 via-purple-200 divide-y-4 min-w-screen">
-                {% include 'now_playing.html' %}
+                {% if access_token %}
+                    {% include 'now_playing.html' %}
+                {% else %}
+                    {% include 'now_playing_guest.html' %}
+                {% endif %}
             </div>
             <div class="bg-black min-w-screen">
                 <div class="flex justify-between sm:w-2/3">
@@ -54,6 +58,11 @@
     </div>
     <script src="https://sdk.scdn.co/spotify-player.js"></script>
     {{ javascript_pack('web_player', 'app', 'party') }}
+    {% if access_token %}
+        <script src="https://sdk.scdn.co/spotify-player.js"></script>
+        {{ javascript_pack('web_player', 'playback') }}
+    {% endif %}
+    {{ javascript_pack( 'app') }}
 </body>
 
 </html>
