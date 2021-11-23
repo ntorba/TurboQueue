@@ -56,8 +56,10 @@
         </turbo-frame>
         </table>
     </div>
-    <script src="https://sdk.scdn.co/spotify-player.js"></script>
-    {{ javascript_pack('web_player', 'app', 'party') }}
+    <script>
+        localStorage.setItem("tq_oauth_token", "{{ access_token }}"); // TODO: these seem to be getting cleared when I change tabs, idk why yet
+    </script>
+
     {% if access_token %}
         <script src="https://sdk.scdn.co/spotify-player.js"></script>
         {{ javascript_pack('web_player', 'playback') }}
