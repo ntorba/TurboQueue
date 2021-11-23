@@ -7,3 +7,4 @@ ACCESS_TOKEN.txt
 frontend/node_modules
 frontend/build
 *.db
+ACCESS_TOKEN.json

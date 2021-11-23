@@ -7,6 +7,7 @@ import threading
 from random import randint
 from dataclasses import dataclass, field, asdict
 import urllib.parse
+import json
 from flask import Flask, render_template, request, redirect
 from flask_cors import CORS
 from turbo_flask import Turbo
@@ -37,7 +38,6 @@ def create_app():
     setup_jinja2_ext(app)
     turbo = Turbo(app)
     return app, turbo
-
 
 app, turbo = create_app()
 
@@ -146,9 +146,11 @@ def __get_remote_now_playing(access_token, party_id):
 
 def __update_now_playing(party_id):
     access_token = PARTY_DB[party_id].access_token
-    if os.path.isfile("ACCESS_TOKEN.txt") and access_token is None:
-        with open("ACCESS_TOKEN.txt", "r") as f:
-            access_token = f.read()
+    if os.path.isfile("ACCESS_TOKEN.json") and access_token is None:
+        with open("ACCESS_TOKEN.json", "r") as f:
+            token_data = json.load(f)
+            access_token = token_data["access_token"]
+            refresh_token = token_data["refresh_token"]
     elif access_token is None:
         time.sleep(3)
         return None
@@ -284,12 +286,23 @@ def next_up(party_id):
 @app.route("/party/<party_id>/")
 def party(party_id):
     party_id = int(party_id)
-    return render_template(
-        "party.html",
-        party_name=PARTY_DB[party_id].name,
-        songs=[track for track in SONG_DB[party_id]["next_up_sorted"]],
-        current_track=SONG_DB[party_id]["now_playing"],
-    )
+    if "access_token" not in request.args:
+        print("rendering GUEST view")
+        return render_template(
+            "party.html",
+            party_name=PARTY_DB[party_id].name,
+            songs=[track for track in SONG_DB[party_id]["next_up_sorted"]],
+            current_track=SONG_DB[party_id]["now_playing"],
+        )
+    else:
+        return render_template(
+            "party.html",
+            party_name=PARTY_DB[party_id].name,
+            songs=[track for track in SONG_DB[party_id]["next_up_sorted"]],
+            current_track=SONG_DB[party_id]["now_playing"],
+            access_token=request.args["access_token"], 
+            # refresh_token=request.args["refresh_token"]
+        )
 
 
 @app.route("/spotify_oauth/<party_id>")
@@ -344,19 +357,25 @@ def spotify_get_token():
     # Auth Step 5: Tokens are Returned to Application
     res_data = res.json()
     ACCESS_TOKEN = res_data["access_token"]
+    REFRESH_TOKEN = res_data["refresh_token"]
     PARTY_DB[party_id].access_token = ACCESS_TOKEN
-    with open("ACCESS_TOKEN.txt", "w") as f:
-        f.write(ACCESS_TOKEN)
+    PARTY_DB[party_id].refresh_token = REFRESH_TOKEN
+    PARTY_DB[party_id].expires_in = res_data["expires_in"]
+    with open("ACCESS_TOKEN.json", "w") as f:
+        json.dump(
+            {
+                "access_token": ACCESS_TOKEN,
+                "refresh_token": REFRESH_TOKEN, 
+                "expires_in": res_data["expires_in"]
+            }, 
+            f, 
+            indent=4
+        )
     # TODO: update to not write this after I confirm I have things working
-    print("I JUST SET ACCESS TOKEN")
-    url_args = f"access_token={ACCESS_TOKEN}&refresh_token={res_data['refresh_token']}"
-    redirect_url = "{}/#{}".format(f"{FINAL_REDIRECT_URI}/{party_id}", url_args)
+    print("I JUST SET ACCESS and refresh TOKEN")
+    url_args = f"access_token={ACCESS_TOKEN}" #&refresh_token={res_data['refresh_token']}" #TODO: do I  need refresh token in url? 
+    redirect_url = "{}/?{}".format(f"{FINAL_REDIRECT_URI}/{party_id}", url_args)
     return redirect(redirect_url)
-
-
-@app.route("/spotify/callback")
-def spotify_callback():
-    return "You finally called me back!"
 
 
 @app.route("/vote", methods=["POST"])
