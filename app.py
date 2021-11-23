@@ -185,7 +185,7 @@ def __update_now_playing(party_id):
                 )
             )
         SONG_DB[party_id]["now_playing"] = remote_now_playing
-        # print("pushing playback progress")
+        print("pushing playback progress")
         turbo.push(
             turbo.update(
                 f'<div class="h-full bg-green-500 absolute" style="width:{ round((remote_now_playing.progress_ms / remote_now_playing.duration_ms)*100) }%">',

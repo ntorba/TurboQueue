@@ -5,3 +5,4 @@ python-dotenv
 turbo-flask
 python-webpack-boilerplate
 spotipy
+flask_sqlalchemy
