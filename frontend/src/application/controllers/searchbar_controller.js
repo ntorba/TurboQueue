@@ -47,7 +47,7 @@ export default class extends Controller {
 
 const addSong = async (track_info) => {
     fetch(
-        "http://localhost:5000/add_track",
+        window.origin + '/add_track',
         {
 
             method: 'POST',

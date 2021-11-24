@@ -2,7 +2,7 @@ function pingSetNowPlaying() {
     var party_id = window.location.pathname.split("/")[2];
     console.log("Pinging server to tell it to update the nowplyaing cuz I skipped to next");
     fetch(
-        "http://localhost:5000/set_now_playing/" + party_id,
+        window.origin + "/set_now_playing/" + party_id,
         {
             method: 'PUT',
         }
