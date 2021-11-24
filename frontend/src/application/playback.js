@@ -46,15 +46,21 @@ export function transferPlayback() {
         );
 }
 
+
 function nextTrack() {
+    var party_id = window.location.pathname.split("/")[2];
     fetch(
-        'https://api.spotify.com/v1/me/player/next',
+        window.origin + "/next_track",
+        // 'https://api.spotify.com/v1/me/player/next',
         {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': "Bearer " + localStorage.tq_oauth_token
-            }
+            },
+            body: JSON.stringify({
+                "party_id": party_id
+            })
         }
     ).then(
         response => {

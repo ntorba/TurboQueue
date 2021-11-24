@@ -262,19 +262,7 @@ def add_track():
 
     # TODO: this would be way better as a class property or something so the sort happens automaticall and not manually
     SONG_DB[party_id]["next_up"][track.uri] = track
-    SONG_DB[party_id]["next_up_sorted"] = sorted(
-        SONG_DB[PARTY_ID]["next_up"].values(),
-        key=lambda track: track.votes,
-        reverse=True,
-    )
-    turbo.push(
-        turbo.update(
-            render_template(
-                "song_table_body.html", songs=SONG_DB[party_id]["next_up_sorted"]
-            ),
-            "song_table_body",
-        )
-    )
+    update_song_table(party_id)
     return {"message": "success"}, 201
 
 
@@ -406,6 +394,27 @@ def vote():
         SONG_DB[party_id]["next_up_sorted"] = new_order
     return {"success": True, "uri": song_uri}, 200
 
+@app.route("/next_track", methods=["POST"])
+def play_next():
+    party_id = int(request.json["party_id"])
+    next_track = SONG_DB[party_id]["next_up_sorted"][0]
+    print(f"next track = {next_track}")
+    headers = {
+        "Content-Type": "application/json", 
+        "Authorization": request.headers["Authorization"]
+    }
+    payload = {
+        "uris": [next_track.uri]
+    }
+    play_next_url ="https://api.spotify.com/v1/me/player/play"
+    res = requests.put(play_next_url, json=payload, headers=headers)
+    if res.status_code != 204:
+        raise Exception("TODO: You're request to play next failed, make a better error")
+    else: 
+        SONG_DB[party_id]["next_up"].pop(next_track.uri)
+        update_song_table(party_id)
+
+
 
 @app.route("/set_now_playing/<party_id>", methods=["PUT"])
 def set_now_playing(party_id):
@@ -426,4 +435,20 @@ def playground_mobile():
     return render_template(
         "playground-mobile-first-different-scroll.html",
         songs=sorted(SONG_DB.values(), key=lambda x: x.votes, reverse=True),
+    )
+
+
+def update_song_table(party_id):
+    SONG_DB[party_id]["next_up_sorted"] = sorted(
+        SONG_DB[PARTY_ID]["next_up"].values(),
+        key=lambda track: track.votes,
+        reverse=True,
+    )
+    turbo.push(
+        turbo.update(
+            render_template(
+                "song_table_body.html", songs=SONG_DB[party_id]["next_up_sorted"]
+            ),
+            "song_table_body",
+        )
     )
