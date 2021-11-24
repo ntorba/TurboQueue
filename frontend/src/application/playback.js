@@ -1,10 +1,8 @@
-console.log("you made it to party");
-
 function pingSetNowPlaying() {
     var party_id = window.location.pathname.split("/")[2];
     console.log("Pinging server to tell it to update the nowplyaing cuz I skipped to next");
     fetch(
-        "http://localhost:5000/set_now_playing/" + party_id,
+        window.origin + "/set_now_playing/" + party_id,
         {
             method: 'PUT',
         }
@@ -48,15 +46,21 @@ export function transferPlayback() {
         );
 }
 
+
 function nextTrack() {
+    var party_id = window.location.pathname.split("/")[2];
     fetch(
-        'https://api.spotify.com/v1/me/player/next',
+        window.origin + "/next_track",
+        // 'https://api.spotify.com/v1/me/player/next',
         {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': "Bearer " + localStorage.tq_oauth_token
-            }
+            },
+            body: JSON.stringify({
+                "party_id": party_id
+            })
         }
     ).then(
         response => {

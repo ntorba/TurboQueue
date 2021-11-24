@@ -9,7 +9,7 @@ export default class extends Controller {
         let postData = async () => {
             try {
                 await fetch(
-                    'http://localhost:5000/vote',
+                    window.origin + '/vote',
                     {
                         method: 'POST',
                         headers: {

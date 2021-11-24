@@ -1,11 +1,11 @@
-import { transferPlayback } from './party.js';
+import { transferPlayback } from './playback.js';
 
 console.log("I made it past the transferplayback import");
 
 const getHashParams = () => {
     var hashParams = {};
     var e, r = /([^&;=]+)=?([^&;]*)/g,
-        q = window.location.hash.substring(1);
+        q = window.location.search.substring(1);
     e = r.exec(q);
     while (e) {
         hashParams[e[1]] = decodeURIComponent(e[2]);
@@ -55,38 +55,6 @@ window.onSpotifyWebPlaybackSDKReady = () => {
     player.addListener('account_error', ({ message }) => {
         console.error(message);
     });
-
-    // player.addListener('player_state_changed', (state => {
-
-    //     if (!state) {
-    //         return;
-    //     }
-
-    //     // var track = state.track_window.current_track;
-    //     // var paused = state.paused;
-    //     fetch(
-    //         'http://localhost:5000/set_now_playing',
-    //         {
-    //             method: 'POST',
-    //             headers: {
-    //                 'Content-Type': 'application/json'
-    //             },
-    //             body: JSON.stringify({
-    //                 "state": state,
-    //                 "another": "another"
-    //             })
-    //         }
-    //     ).then(
-    //         response => response.json()
-    //     )
-    //         .then(
-    //             data => { console.log("success: ", data); }
-    //         );
-    //     player.getCurrentState().then(state => {
-    //         (!state) ? active = false : active = true;
-    //     });
-
-    // }));
 
     document.getElementById('togglePlayBtn').onclick = function () {
         // TODO: Replace this with a call directly to the play/pause api endpoint, so i can move it out of this embedded nonsense
