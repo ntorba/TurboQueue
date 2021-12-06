@@ -25,19 +25,19 @@
                 </div>
             </td>
             <td class="px-6 text-left w-1/6">
-                <turbo-frame id={{song.uri}}>
+                <turbo-frame id={{song.id}}>
                     <span
                         class="p-3 inline-flex text-lg leading-5 font-semibold rounded-full bg-green-100 text-green-800">{{song.votes}}</span>
                 </turbo-frame>
             </td>
             <td class="px-6 w-1/6">
                 <div data-controller="vote">
-                    <button id={{song.uri}} type="button" data-action="click->vote#vote"
+                    <button id={{song.id}} type="button" data-action="click->vote#vote"
                         class="bg-green-800 text-green-100 hover:bg-green-400 rounded px-2 py-2">Vote!</button>
                 </div>
             </td>
         </tr>
-        <script>
+        <!-- <script>
             document.getElementById('{{song.uri}}').ontouchstart = function (event) {
                 let postData = async () => {
                     try {
@@ -67,7 +67,7 @@
 
                 postData();
             }
-        </script>
+        </script> -->
         {% endfor %}
     </tbody>
 </table>
