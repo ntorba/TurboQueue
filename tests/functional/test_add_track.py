@@ -1,4 +1,4 @@
-from app import create_app
+from backend.app import create_app
 
 
 def test_add_track():
@@ -7,18 +7,20 @@ def test_add_track():
     WHEN the '/add_song' page is requested (POST) with correct payload
     THEN check that the song is added to DB correctly
     """
-    flask_app, _ = create_app()
+    flask_app = create_app()
     track_payload = {
-        "name": "name",
-        "artist": "artist",
-        "uri": "uri",
-        "img_sm": "sm_img_url",
-        "img_md": "md_img_url",
-        "img_lg": "lg_img_url",
-        "duration_ms": 1000,
+        "track": {
+            "name": "name",
+            "artist": "artist",
+            "uri": "uri",
+            "img_sm": "sm_img_url",
+            "img_md": "md_img_url",
+            "img_lg": "lg_img_url",
+            "duration_ms": 1000,
+            "party_id": 1
+        }
     }
     with flask_app.test_client() as test_client:
-        breakpoint()
         response = test_client.post("/add_track", json=track_payload)
         assert response.status_code == 201
-        assert response.json()["message"] == "success"
+        assert response.json["message"] == "success"
